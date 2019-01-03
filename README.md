@@ -1,1 +1,1 @@
-# OpenCV Video Label2
+# OpenCV Video Label
