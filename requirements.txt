@@ -1,0 +1,7 @@
+numpy==1.15.2
+opencv-python==3.4.0.14
+Pillow==5.2.0
+scipy==1.1.0
+tensorflow-gpu==1.11.0
+mss==3.3.1
+GoogleDriveDownloader==0.3
