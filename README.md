@@ -69,6 +69,6 @@ The tool currently supports the following video sources:
 1. Regular video files like .mp4 and .avi
 2. Webcams
 3. IPwebcams (which allows users to stream from their phone)
-4. Screencapturing (currently only to generate videos, which can then be used for tracking)
+4. Screencapturing
 
 
