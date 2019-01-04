@@ -25,6 +25,10 @@ This Git repository implements a tkinter/opencv video player which allows users 
     source venv/bin/activate
 ```
 The first time you run the program it will download and install the re3 model (700mb), therefore startup will take a bit longer.
+To run the program:
+```
+python __main__.py
+```
 
 # About the implemented Algorithms:
 ## [Re3](https://gitlab.com/danielgordon10/re3-tensorflow):
