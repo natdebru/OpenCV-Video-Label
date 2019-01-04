@@ -50,9 +50,8 @@ The tool currently supports the following video sources:
 4. SciPy
 5. mss
 6. Pillow
-7. 
+7. GoogleDriveDownloader ( only for downloading the re3 model: http://bit.ly/2L5deYF )
 8. CUDA (Strongly recommended for Re3)
 9. cuDNN (recommended for Re3)
 
 # Installation:
- If you which to use the Re3 tracker please download their latest model (http://bit.ly/2L5deYF) and unzip its content in algorithms/re3/logs/ 
