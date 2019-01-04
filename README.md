@@ -22,7 +22,6 @@ This Git repository implements a tkinter/opencv video player which allows users 
     source venv/bin/activate
     pip install --upgrade pip
     pip install -r requirements.txt
-    source venv/bin/activate
 ```
 The first time you run the program it will download and install the re3 model (700mb), therefore startup will take a bit longer.
 To run the program:
