@@ -7,7 +7,7 @@ from tkinter import ttk
 from os.path import isfile, join
 from PIL import Image, ImageTk
 from video_sources import ScreenCapture, IpWebcamStream, WebcamStream, VideoStream
-from settings import ICON, GUI_BG, GUI_RED, IMG_TYPES
+from constants import ICON, GUI_BG, GUI_RED, IMG_TYPES
 
 
 class TkTopMenu(tk.Menu):

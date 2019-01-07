@@ -5,7 +5,7 @@ import urllib.request
 import numpy as np
 from PIL import Image, ImageTk
 from tkinter import simpledialog, filedialog
-from settings import SUPPORTED_FILES, VIDEO_H, VIDEO_W
+from constants import SUPPORTED_FILES, VIDEO_H, VIDEO_W
 
 
 # allows the playback of regular video files

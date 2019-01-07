@@ -2,7 +2,7 @@ import cv2
 import tkinter as tk
 import numpy as np
 from PIL import Image, ImageTk
-from settings import VIDEO_BACKGROUND_IMG, VIDEO_H, VIDEO_W, VIDEO_PATH, GUI_RED
+from constants import VIDEO_BACKGROUND_IMG, VIDEO_H, VIDEO_W, VIDEO_PATH, GUI_RED
 
 
 # frame which holds the video frames

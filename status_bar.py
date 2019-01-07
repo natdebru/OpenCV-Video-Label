@@ -1,5 +1,5 @@
 import tkinter as tk
-from settings import *
+from constants import *
 
 
 # statusbar for messages to user

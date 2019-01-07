@@ -5,7 +5,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 from functools import partial
-from settings import GUI_BG, GUI_GRAYD, GUI_BLUE, GUI_RED, GUI_SHADOW, data_set_previewsize
+from constants import GUI_BG, GUI_GRAYD, GUI_BLUE, GUI_RED, GUI_SHADOW, data_set_previewsize
 
 FRAME_SETTINGS = {"bg": GUI_BG}
 LABEL_TITLE = {"bg": GUI_BG, "fg": GUI_GRAYD, "font": "Arial 11 bold", "cursor": "hand2"}

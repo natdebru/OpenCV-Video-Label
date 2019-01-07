@@ -1,5 +1,5 @@
 import tkinter as tk
-from settings import GUI_BG, GUI_GRAYD, GUI_SHADOW, GUI_BLUE, STORE_N, button_config
+from constants import GUI_BG, GUI_GRAYD, GUI_SHADOW, GUI_BLUE, STORE_N, button_config
 
 LABEL_TITLE = {"bg": GUI_BG, "fg": GUI_GRAYD, "font": "Arial 9 bold"}
 SLEEP_SCALE = {"from_": 2, "to": 100, "width": 10, "resolution": 2, "border": 0,

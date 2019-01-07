@@ -2,7 +2,7 @@ import tooltip
 import tkinter as tk
 import itertools as it
 from PIL import Image, ImageTk
-from settings import FRAME_SETTINGS, GUI_BG, GUI_BLUE, WINDOWS_GRAYL, BUTTON_SETTINGS, button_config
+from constants import FRAME_SETTINGS, GUI_BG, GUI_BLUE, WINDOWS_GRAYL, BUTTON_SETTINGS, button_config
 
 
 # frame which hold the buttons to control video playback
