@@ -3,7 +3,7 @@ import cv2
 import mss
 import urllib.request
 import numpy as np
-from PIL import Image, ImageTk, ImageGrab
+from PIL import Image, ImageTk
 from tkinter import simpledialog, filedialog
 from settings import SUPPORTED_FILES, VIDEO_H, VIDEO_W
 
@@ -192,6 +192,10 @@ class ScreenCapture:
         self.stream = None
         self.screen_region = None
         self.resize = (VIDEO_W, VIDEO_H)
+
+        self.monitor_width = self.parent.root.winfo_screenwidth()
+        self.monitor_height = self.parent.root.winfo_screenheight()
+
         self.init()
 
     # display image on the gui
@@ -204,8 +208,10 @@ class ScreenCapture:
     def init(self):
         self.parent.status_bar.set('Starting screen capture')
 
-        # grab the current image from the screen
-        new_frame = cv2.resize(np.array(ImageGrab.grab()), self.resize, interpolation=cv2.INTER_LINEAR)
+        # grab the current image from the screen and resize to fit gui
+        full_screen = sct.grab({'top': 0, 'left': 0, 'width': self.monitor_width, "height": self.monitor_height})
+        new_frame = cv2.cvtColor(cv2.resize(np.array(full_screen), self.resize, interpolation=cv2.INTER_LINEAR),
+                                 cv2.COLOR_BGR2RGB)
 
         # display the current image on the gui to allow region selection
         self.send_image_to_screen(new_frame)
@@ -232,11 +238,8 @@ class ScreenCapture:
         width = self.parent.roi_br[0] - self.parent.roi_tl[0]
         height = self.parent.roi_br[1] - self.parent.roi_tl[1]
 
-        monitor_width = self.parent.root.winfo_screenwidth()
-        monitor_height = self.parent.root.winfo_screenheight()
-
-        resizex = monitor_width / self.resize[0]
-        resizey = monitor_height / self.resize[1]
+        resizex = self.monitor_width / self.resize[0]
+        resizey = self.monitor_height / self.resize[1]
         tlx, tly = int(self.parent.roi_tl[0] * resizex), int(self.parent.roi_tl[1] * resizey)
         new_width = int(width * resizex)
         new_height = int(height * resizey)
@@ -248,8 +251,7 @@ class ScreenCapture:
             self.calc_region_of_screen()
             self.resize = None
 
-        res = sct.grab(self.screen_region)
-        new_frame = np.array(Image.frombytes("RGB", res.size, res.rgb, "raw", "BGR"))
+        new_frame = np.array(sct.grab(self.screen_region))
 
         if not self.resize:
             self.calc_resize(new_frame)
