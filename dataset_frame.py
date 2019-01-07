@@ -6,22 +6,23 @@ import tkinter as tk
 from tkinter import filedialog
 from functools import partial
 from constants import GUI_BG, GUI_GRAYD, GUI_BLUE, GUI_RED, GUI_SHADOW, data_set_previewsize
+import platform
 
 FRAME_SETTINGS = {"bg": GUI_BG}
 LABEL_TITLE = {"bg": GUI_BG, "fg": GUI_GRAYD, "font": "Arial 11 bold", "cursor": "hand2"}
 LABEL_IMG = {"bg": GUI_BG, "cursor": "hand2"}
 img_padding = 5
 BUTTON_LAYOUT = {"cursor": "hand2", "pady": 5, "bd": 0, "bg": GUI_BG, "fg": GUI_GRAYD, "font": "Arial 11 bold"}
-
 EDIT_BUTTON_LAYOUT = {"cursor": "hand2", "pady": 5, "bd": 1, "activebackground": GUI_BLUE, "bg": GUI_BLUE,
                       "activeforeground": GUI_BG, "fg": GUI_BG, "font": "Arial 9 bold"}
-
 SCROLL_STYLE = {"bg": GUI_BG, "cursor": "hand2"}
-
 IMAGE_BUTTON = {"bg": GUI_BG, "activebackground": GUI_BG, "cursor": "hand2", "border": 0, "relief": "solid",
                 "highlightbackground": GUI_BLUE, "highlightcolor": GUI_BLUE}
 
 threading.Lock()
+
+# used for os-based scrolling
+OS = platform.system()
 
 
 class TkDatasetFrame:
@@ -66,7 +67,6 @@ class TkDatasetFrame:
 
         self.canvas = tk.Canvas(self.image_frame_base, bg=GUI_BG, highlightthickness=0)
         self.canvas.pack(side="left", fill="both", expand=1)
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
         self.image_frame = tk.Frame(self.canvas, bg=GUI_BG, bd=0)
         tk.Grid.columnconfigure(self.image_frame, 0, weight=1)
@@ -91,12 +91,25 @@ class TkDatasetFrame:
         self.export_button = None
 
         # resize and scroll functions
+        if OS == "Linux":
+            self.canvas.bind_all('<4>', self._on_mousewheel, add='+')
+            self.canvas.bind_all('<5>', self._on_mousewheel, add='+')
+        else:
+            # Windows and MacOS
+            self.canvas.bind_all("<MouseWheel>", self._on_mousewheel, add='+')
+
         self.canvas.bind('<Configure>', self._configure_canvas)
         self.image_frame.bind('<Configure>', self._configure_interior)
 
     # scroll canvas on mousewheel scroll
     def _on_mousewheel(self, event):
-        self.canvas.yview_scroll(int(-1 * (event.delta / 100)), "units")
+        if OS == "Linux":
+            if event.num == 4:
+                self.canvas.yview_scroll(-1, "units")
+            elif event.num == 5:
+                self.canvas.yview_scroll(1, "units")
+        else:
+            self.canvas.yview_scroll(int(-1 * (event.delta / 100)), "units")
 
     # track changes to the canvas and frame width and sync them,
     # also updating the scrollbar
