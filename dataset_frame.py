@@ -1,12 +1,13 @@
 import threading
 import datetime
+import platform
 import cv2
 import os
 import tkinter as tk
 from tkinter import filedialog
 from functools import partial
 from constants import GUI_BG, GUI_GRAYD, GUI_BLUE, GUI_RED, GUI_SHADOW, data_set_previewsize
-import platform
+
 
 FRAME_SETTINGS = {"bg": GUI_BG}
 LABEL_TITLE = {"bg": GUI_BG, "fg": GUI_GRAYD, "font": "Arial 11 bold", "cursor": "hand2"}

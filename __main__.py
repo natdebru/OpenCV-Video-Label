@@ -10,7 +10,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-from constants import ICON, VIDEO_H, VIDEO_W, GUI_BG, GUI_GRAYL, GUI_RED, GUI_REDD_RGB, data_set_previewsize
+from constants import ICONPNG, VIDEO_H, VIDEO_W, GUI_BG, GUI_GRAYL, GUI_RED, GUI_REDD_RGB, data_set_previewsize
 
 
 class MainWindow:
@@ -51,7 +51,8 @@ class MainWindow:
 
         self.root.minsize(VIDEO_W, VIDEO_H + 260)
         self.root.title("OpenCV Video Label")
-        self.root.wm_iconbitmap(ICON)
+        self.icon = tk.PhotoImage(file=ICONPNG)
+        self.root.tk.call('wm', 'iconphoto', self.root._w, self.icon)
 
         # show loading screen while tracking algorithms are loaded
         loading = LoadingScreen(self.root)

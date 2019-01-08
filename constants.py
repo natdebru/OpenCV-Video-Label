@@ -4,6 +4,7 @@ VIDEO_W = int(1250 * resize_factor)
 VIDEO_H = int(720 * resize_factor)
 
 ICON = 'bitmaps/icon.ico'
+ICONPNG = 'bitmaps/icon.png'
 VIDEO_BACKGROUND_IMG = "bitmaps/video_bg.jpg"
 
 # color palette :

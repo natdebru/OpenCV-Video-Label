@@ -7,7 +7,7 @@ from tkinter import ttk
 from os.path import isfile, join
 from PIL import Image, ImageTk
 from video_sources import ScreenCapture, IpWebcamStream, WebcamStream, VideoStream
-from constants import ICON, GUI_BG, GUI_RED, IMG_TYPES
+from constants import GUI_BG, GUI_RED, IMG_TYPES
 
 
 class TkTopMenu(tk.Menu):
@@ -75,7 +75,7 @@ class TkTopMenu(tk.Menu):
         # popup window to display loading progress
         import_window = tk.Toplevel(self.root, bg=GUI_BG)
         import_window.attributes('-disabled', True)
-        import_window.wm_iconbitmap(ICON)
+        import_window.tk.call('wm', 'iconphoto', import_window._w, self.parent.icon)
         import_window.geometry("300x100")
         import_window.title('Loading ' + dataset_name + "...")
         self.center_on_screen(import_window)
@@ -184,7 +184,7 @@ class TkTopMenu(tk.Menu):
     def about_app(self):
         about_dialog = tk.Toplevel(self.root, bg=GUI_BG)
         self.center_on_screen(about_dialog)
-        about_dialog.wm_iconbitmap(ICON)
+        about_dialog.tk.call('wm', 'iconphoto', about_dialog._w, self.parent.icon)
         about_dialog.minsize(250, 200)
         about_dialog.geometry("250x200")
         about_dialog.title('About ' + self.root.title())
