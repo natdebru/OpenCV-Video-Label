@@ -6,4 +6,4 @@ tensorflow-gpu==1.11.0
 mss==3.3.1
 GoogleDriveDownloader==0.3
 urllib3==1.23
-requests=2.19.1
+requests=2.20.0
