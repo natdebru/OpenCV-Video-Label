@@ -9,9 +9,10 @@ This Git repository implements a tkinter/opencv video player which will allow us
 4. SciPy
 5. mss
 6. Pillow
-7. GoogleDriveDownloader ( only for downloading the re3 model: http://bit.ly/2L5deYF )
-8. CUDA (Strongly recommended for Re3)
-9. cuDNN (recommended for Re3)
+7. urllib3
+8. GoogleDriveDownloader ( only for downloading the re3 model: http://bit.ly/2L5deYF )
+9. CUDA (Strongly recommended for Re3)
+10. cuDNN (recommended for Re3)
 
 # First Time Setup:
 ``` 
