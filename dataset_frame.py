@@ -1,13 +1,8 @@
 import threading
-import datetime
 import platform
-import cv2
-import os
 import tkinter as tk
-from tkinter import filedialog
 from functools import partial
 from constants import GUI_BG, GUI_GRAYD, GUI_BLUE, GUI_RED, GUI_SHADOW, data_set_previewsize
-
 
 FRAME_SETTINGS = {"bg": GUI_BG}
 LABEL_TITLE = {"bg": GUI_BG, "fg": GUI_GRAYD, "font": "Arial 11 bold", "cursor": "hand2"}
@@ -33,7 +28,7 @@ class TkDatasetFrame:
         self.parent.dataset_explorer.grid_rowconfigure(0, weight=1)
 
         # variables used for drawing:
-        self.class_dict = self.parent.dataset_dict
+        self.dataset = self.parent.dataset
 
         self._after_id = None
         self.frame_list = []
@@ -90,6 +85,7 @@ class TkDatasetFrame:
         self.destination_option = None
         self.move_button = None
         self.export_button = None
+        self.export_selection = None
 
         # resize and scroll functions
         if OS == "Linux":
@@ -134,11 +130,12 @@ class TkDatasetFrame:
 
     # prepares the frames and buttons for display of images classes en buttons
     def reset_frames(self, update_current_class=True):
-        self.class_dict = self.parent.dataset_dict
+        self.dataset = self.parent.dataset
         self.clear(self.frame_list)
         self.canvas.yview_moveto(0)
 
-        if update_current_class or not list(self.class_dict[self.current_class]):
+        # if tab switching or image has been deleted and class is now empty
+        if update_current_class or self.current_class not in self.dataset.classes:
             self.current_class = self.parent.current_object
 
         # initialise delete button if not yet done
@@ -146,46 +143,61 @@ class TkDatasetFrame:
             self.delete_button = tk.Button(self.settings_frame, EDIT_BUTTON_LAYOUT, text='Delete selected images',
                                            command=self.delete_selected)
             self.delete_button.pack(side="top", fill="x", pady=10, padx=20)
-
             self.export_button = tk.Button(self.settings_frame, EDIT_BUTTON_LAYOUT, text='Export dataset',
                                            command=self.export_dataset_thread)
             self.export_button.pack(side="bottom", fill="x", pady=10, padx=40)
 
-    # bad threading function to speedup add images:
-    def add_classes_thread(self):
-        object_classes = list(self.class_dict.keys())
-        t = threading.Thread(target=self.add_classes(object_classes))
-        t.deamon = True
-        t.start()
+            spacing = tk.Frame(self.settings_frame, bg=GUI_SHADOW, height=1)
+            spacing.pack(side="bottom", fill="x", padx=10)
 
-    # adds buttons for each existing class to the class frame
-    # which allow the user to display the images of that class
-    def add_classes(self, object_classes):
-        for key in object_classes:
-            if list(self.class_dict[key]):
-                total = tk.Frame(self.class_frame, bg=GUI_SHADOW, height=1)
-                total.pack(side="top", fill="x", padx=10)
+            self.export_selection = tk.Listbox(self.settings_frame, selectmode=tk.BROWSE)
+            self.export_selection.configure(relief="flat", cursor="hand2", takefocus=0, activestyle='none', bd=0,
+                                            height=3,
+                                            highlightcolor=GUI_BG, highlightbackground=GUI_BG,
+                                            font=("Arial", 11, "bold"),
+                                            selectbackground=GUI_SHADOW, fg=GUI_GRAYD, listvariable=0,
+                                            selectforeground=GUI_GRAYD,
+                                            exportselection=False)
+            self.export_selection.bind('<<ListboxSelect>>', self.update_export_selection)
+            self.export_selection.insert(0, "     Cropped images")
+            self.export_selection.insert(1, "     Pascal VOC (xml)")
+            self.export_selection.insert(2, "     Single csv file")
+            self.export_selection.select_set(0)
+            self.export_selection.pack(side="bottom", fill="x", pady=5, padx=40)
 
-                title_string = key + " ({})".format(len(self.class_dict[key]))
-                action_with_arg = partial(self.draw_images, key)
-                title = tk.Button(total, BUTTON_LAYOUT, text=title_string, command=action_with_arg)
-                title.pack(side="top", fill="x", )
+            # option menu to select how the data will be exported:
+            tk.Label(self.settings_frame, bg=GUI_BG, fg=GUI_GRAYD, font="Arial 10 bold",
+                     text="Export format:").pack(side="bottom", fill="x", padx=40)
 
-                spacing = tk.Frame(total, bg=GUI_SHADOW, height=1)
-                spacing.pack(side="top", fill="x", padx=10)
+    def update_export_selection(self, _):
+        index = self.export_selection.curselection()[0]
+        self.dataset.export_setting = index
 
-                self.frame_list.append(total)
+    # adds buttons for each existing class to the class frame (left)
+    # which allows the user to display the images of that class
+    def add_classes(self):
+        for object_class in self.dataset.classes:
+            total = tk.Frame(self.class_frame, bg=GUI_SHADOW, height=1)
+            total.pack(side="top", fill="x", padx=10)
 
-        # if classes available automatically draw them
-        if object_classes:
+            title_string = object_class + " ({})".format(len(self.dataset.dataset_dict[object_class]))
+            action_with_arg = partial(self.draw_images, object_class)
+            title = tk.Button(total, BUTTON_LAYOUT, text=title_string, command=action_with_arg)
+            title.pack(side="top", fill="x", )
+
+            spacing = tk.Frame(total, bg=GUI_SHADOW, height=1)
+            spacing.pack(side="top", fill="x", padx=10)
+            self.frame_list.append(total)
+
+        # if classes available, draw the current classes' images on the middle frame
+        if self.dataset.classes:
             self.draw_images(self.current_class)
+        else:
+            self.clear(self.image_list)
 
     # TODO try adding images more images on scroll instead of all at once, or pagination
     # updates the image frame with the images without the use of threads
     def draw_images(self, object_class):
-        self.current_class = object_class
-        self.current_selection = []
-
         # remove currently displayed images
         self.clear(self.image_list)
 
@@ -194,29 +206,27 @@ class TkDatasetFrame:
         self.canvas.yview_moveto(0)
         width = self.canvas.winfo_width()
         ipad = 2
-
-        # calculate the number of images that fit a row given the current screen width
-        img_per_row = int((width - 20) / (data_set_previewsize + 2 * (ipad + img_padding)))
-        self.img_per_row = img_per_row
-
-        self.button_list = {}
-
         row_num = 0
         col_num = 0
+
+        # calculate the number of images that fit a row given the current screen width
+        self.img_per_row = int((width - 20) / (data_set_previewsize + 2 * (ipad + img_padding)))
+        self.current_class = object_class
+        self.current_selection = []
+        self.button_list = {}
+
         row = tk.Frame(self.image_frame, FRAME_SETTINGS)
 
         # draw the images buttons on row frames which are added to the main image frame
-        for img_id, img_list in self.class_dict[object_class].items():
-            [_, padded_photo] = img_list
-
-            image_button = tk.Button(row, IMAGE_BUTTON, image=padded_photo,
-                                     command=lambda name=img_id: self.add_to_selected(name))
-            image_button.image = padded_photo
+        for image_object in self.dataset.dataset_dict[object_class]:
+            image_button = tk.Button(row, IMAGE_BUTTON, image=image_object.preview_image,
+                                     command=lambda name=image_object: self.add_to_selected(name))
+            image_button.image = image_object.preview_image
             image_button.grid(column=col_num, row=0, ipady=ipad, ipadx=ipad, sticky="nsew",
                               padx=img_padding, pady=img_padding)
-            self.button_list[img_id] = image_button
+            self.button_list[image_object.image_id] = image_button
             col_num += 1
-            if col_num == img_per_row:
+            if col_num == self.img_per_row:
                 row.grid(row=row_num, column=0)
                 self.image_list.append(row)
                 row = tk.Frame(self.image_frame, FRAME_SETTINGS)
@@ -228,45 +238,20 @@ class TkDatasetFrame:
 
     # use thread to prevent gui form freezing when exporting dataset
     def export_dataset_thread(self):
-        t = threading.Thread(target=self.export_dataset)
+        t = threading.Thread(target=self.dataset.export)
         t.deamon = True
         t.start()
-
-    # export dataset, store images in user selected folder
-    def export_dataset(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__)) + "/datasets"
-        folder_selected = filedialog.askdirectory(initialdir=dir_path)
-        time = datetime.datetime.now().strftime("%H_%M")
-        base_folder = "/Dataset_" + time + "/"
-
-        directory = folder_selected + base_folder
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        for folder in self.class_dict.keys():
-            sub_dir = directory + "/" + folder
-            if not os.path.exists(sub_dir):
-                os.makedirs(sub_dir)
-
-            # copy to prevent changing dictionary errors while exporting and tracking at the same time
-            copy_dict = self.class_dict[folder].copy()
-            for image_id in copy_dict:
-                filename = sub_dir + "/" + str(folder) + "_" + str(image_id) + ".jpg"
-                # open image and convert back to rgb
-                img = copy_dict[image_id][0][..., ::-1]
-
-                cv2.imwrite(filename, img)
-        self.parent.status_bar.set("Successfully exported dataset.")
 
     # deletes all selected items from the dataset
     def delete_selected(self):
         num = len(self.current_selection)
         # check if there are images to delete
         if num > 0:
-            for item in self.current_selection:
-                del self.class_dict[self.current_class][item]
-            if self.current_class:
-                self.reset_frames(False)
-                self.add_classes_thread()
+            for image_object in self.current_selection:
+                self.dataset.remove_image(image_object)
+        if self.current_class:
+            self.reset_frames(False)
+            self.add_classes()
 
     # TODO: implement moving selected images to different class
     # move selected images to a different object class
@@ -274,13 +259,13 @@ class TkDatasetFrame:
         print("moving", self.current_selection)
 
     # adds an image to the list of the currently selected images to be able to delete or move a selection of images
-    def add_to_selected(self, count_id):
-        button = self.button_list[count_id]
+    def add_to_selected(self, image_object):
+        button = self.button_list[image_object.image_id]
         if button["bg"] == GUI_BG:
-            self.current_selection.append(count_id)
+            self.current_selection.append(image_object)
             button.config(bg=GUI_RED, activebackground=GUI_RED)
-            self.selected_button_ids.append(count_id)
+            self.selected_button_ids.append(image_object.image_id)
         else:
-            self.current_selection.remove(count_id)
+            self.current_selection.remove(image_object)
             button.config(bg=GUI_BG, activebackground=GUI_BG)
-            self.selected_button_ids.remove(count_id)
+            self.selected_button_ids.remove(image_object.image_id)

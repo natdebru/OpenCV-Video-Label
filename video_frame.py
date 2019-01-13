@@ -168,9 +168,9 @@ class RectTracker:
 
         # set the object class to value of the entry field
         self.root.current_object = self.root.tracking_options.get_object_class()
-        if self.root.current_object not in self.root.dataset_dict:
-            self.root.dataset_dict[self.root.current_object] = {}
-
+        if self.root.current_object not in self.root.dataset.classes:
+            self.root.dataset.dataset_dict[self.root.current_object] = []
+            self.root.dataset.classes.append(self.root.current_object)
         try:
             self.root.tracker.track(self.root.current_object, self.root.cur_image[:, :, ::-1], [tl_x, tl_y, br_x, br_y])
         except Exception as e:

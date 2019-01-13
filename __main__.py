@@ -10,7 +10,10 @@ import numpy as np
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-from constants import ICONPNG, VIDEO_H, VIDEO_W, GUI_BG, GUI_GRAYL, GUI_RED, GUI_REDD_RGB, data_set_previewsize
+from constants import ICONPNG, VIDEO_H, VIDEO_W, GUI_BG, GUI_GRAYL, GUI_RED
+
+# testing:
+import dataset
 
 
 class MainWindow:
@@ -36,7 +39,7 @@ class MainWindow:
         # dataset settings
         self.current_object = ""
         self.max_image_count = 0
-        self.dataset_dict = {}
+        self.dataset = dataset.Dataset(self)
 
         # variables keeping sleep time values after each frame, lower is faster
         self.speed = 10
@@ -126,7 +129,7 @@ class MainWindow:
             self.control_panel.pause_playing()
             self.active_tab = "dataset_explorer"
             self.dataset_frame.reset_frames()
-            self.dataset_frame.add_classes_thread()
+            self.dataset_frame.add_classes()
 
     # import trackers and set re3 as default tracking algorithm
     def load_trackers(self):
@@ -135,56 +138,10 @@ class MainWindow:
         self.tracker_list = [re3_tracker.Re3Tracker(), CMT.CMT(self)]
         self.tracker = self.tracker_list[0]
 
-    # draws a red border and the label of the class on the current frame
-    def draw_roi(self, tl_x, tl_y, br_x, br_y):
-        font = cv2.FONT_HERSHEY_DUPLEX
-
-        # draw the bounding box
-        cv2.rectangle(self.cur_image, (tl_x, tl_y), (br_x, br_y), GUI_REDD_RGB, 2)
-
-        # draw the class label background and label
-        cv2.rectangle(self.cur_image, (tl_x - 1, tl_y - 15), (tl_x + 10 + len(self.current_object) * 10, tl_y),
-                      GUI_REDD_RGB, cv2.FILLED)
-        cv2.putText(self.cur_image, self.current_object, (tl_x + 5, tl_y - 2), font, .5,
-                    (255, 255, 255), 1, cv2.LINE_AA)
-
     # creates the solitaire-like video while tracking
     def solitaire_maker(self, tl_x, tl_y, br_x, br_y):
         self.solitaire_image[tl_y:br_y, tl_x:br_x] = self.cur_image[tl_y:br_y, tl_x:br_x]
         self.solitaire_video.write(self.solitaire_image[:, :, ::-1])
-
-    # takes an image and pads it with black borders, maintaining its original aspect ratio
-    def pad_image(self, cropped, max_w=data_set_previewsize, max_h=data_set_previewsize):
-        (h, w) = cropped.shape[:2]
-
-        # prevent division by 0 on next lines and resize error
-        if w > 5 and h > 5:
-            resize_x = max_w / w
-            resize_y = max_h / h
-            top, bot, left, right = 0, 0, 0, 0
-
-            if resize_y < resize_x:
-                new_width = int(w * resize_y)
-                resize = tuple((new_width, max_h))
-                total_pad = max_w - new_width
-                left = int(total_pad / 2)
-                right = total_pad - left
-            else:
-                new_height = int(h * resize_x)
-                resize = tuple((max_w, new_height))
-                total_pad = max_h - new_height
-                top = int(total_pad / 2)
-                bot = total_pad - top
-
-            cropped = cv2.resize(cropped, resize, interpolation=cv2.INTER_LINEAR)
-            cropped = cv2.copyMakeBorder(cropped, top, bot, left, right, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-
-            return True, cropped
-
-        # stop tracking if the roi's width or height is to small
-        else:
-            self.tracking = False
-            return False, None
 
     # function to calculate and display the fps on gui
     def calc_fps(self):
@@ -219,21 +176,23 @@ class MainWindow:
                 if self.tracking:
                     try:
                         [tl_x, tl_y, br_x, br_y] = self.tracker.track(self.current_object, self.cur_image[:, :, ::-1])
+                        dataset_image = dataset.DatasetImage(self.cur_image[:, :, ::1],
+                                                             self.max_image_count,
+                                                             self.current_object,
+                                                             tl_x, tl_y, br_x, br_y)
+                        # store image to dataset
+                        if self.frame_counter % self.tracking_options.get_n() == 0:
+                            successful_cropping = dataset_image.crop_and_pad_roi()
+                            if successful_cropping:
+                                self.dataset.add_image(dataset_image)
+                                self.max_image_count += 1
+                        dataset_image.draw_roi()
+                        self.frame = dataset_image.image
+
                     # except to catch cmt bugs
                     except Exception as e:
-                        print(e)
+                        print(e, "in main.py at: if self.tracking:")
                         self.tracking = False
-
-                    # store image to dataset
-                    if self.frame_counter % self.tracking_options.get_n() == 0:
-                        cropped_roi = self.cur_image[tl_y:br_y, tl_x:br_x].copy()
-                        success, padded_preview = self.pad_image(cropped_roi)
-                        if success:
-                            photo = Image.fromarray(padded_preview)
-                            padded_preview = ImageTk.PhotoImage(image=photo)
-                            self.dataset_dict[self.current_object][self.max_image_count] = [cropped_roi, padded_preview]
-                            self.max_image_count += 1
-                    self.draw_roi(tl_x, tl_y, br_x, br_y)
 
                 # display the current frame on the gui
                 if self.tracking and self.solitaire_mode:
