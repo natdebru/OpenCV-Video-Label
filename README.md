@@ -1,6 +1,8 @@
 # OpenCV-Video-Label
 This Git repository implements a tkinter/opencv video player which will allow users to play videos and enables them to test their own algorithms in a user friendly environment. Besides, it supports two object tracking algorithms (Re3 and CMT) which make it possible to label an object once, track the object over multiple frames and store the resulting cropped images of the object, this reduces the amount of time needed for image tagging which is usually needed when creating datasets.
 
+[Video demo](https://www.youtube.com/watch?v=3BcrK0O1kb4)
+
 # Dependencies:
 1. Python 3.5 
 2. OpenCV 2 
