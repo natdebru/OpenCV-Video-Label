@@ -5,5 +5,5 @@ scipy==1.1.0
 tensorflow-gpu==1.11.0
 mss==3.3.1
 GoogleDriveDownloader==0.3
-urllib3==1.23
+urllib3>=1.24.2
 requests=2.20.0
